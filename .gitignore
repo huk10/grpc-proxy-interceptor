@@ -1,0 +1,10 @@
+*.iml
+openapi3
+build
+.idea
+openapi/
+test
+.vscode
+
+node_modules
+.DS_Store
