@@ -1,7 +1,7 @@
-import SwaggerClient from "swagger-client";
 import { resolve } from "node:path";
-import { traverseAllTheFilesInTheDirectory } from "./utils.mjs";
 import { status } from "@grpc/grpc-js";
+import SwaggerClient from "swagger-client";
+import { checkPathIsExist, fsForEach, negate } from "./helper/utils.mjs";
 
 export class ApiProxy {
   constructor (getaway, openapiDir) {
@@ -15,18 +15,18 @@ export class ApiProxy {
   // 加载 openapi 文件
   async loadOpenapiFile () {
     const dirname = resolve(process.cwd(), this.openapiDir)
-    const isExist = await checkPathIsExist(dirname)
-    if (!isExist) {
+    if (await negate(await checkPathIsExist(dirname))) {
       throw new Error("openapi 目录不存在，请使用脚本生成！")
     }
-    await traverseAllTheFilesInTheDirectory(dirname, async (url) => {
+
+    await fsForEach(dirname, async (url) => {
       if(url.endsWith(".swagger.json")) {
         const openapi = await parseOpenApiSpec(url)
         openapi.host = this.getaway
         this.paths.push(url)
         this.openapi.push(openapi)
       }
-    })
+    });
     this.loadDone = true
   }
 
@@ -88,20 +88,6 @@ export class ApiProxy {
         details: result.ok ? '' : result.body.message,
       }
     }
-  }
-}
-
-
-/**
- * 检查路径是否存在
- * @param url {string}
- */
-async function checkPathIsExist (url) {
-  try {
-    await stat(url)
-    return true
-  } catch (err) {
-    return false
   }
 }
 

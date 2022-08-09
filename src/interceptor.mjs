@@ -1,6 +1,21 @@
-import { InterceptingCall, Metadata } from "@grpc/grpc-js"
 import {ApiProxy} from "./proxy.mjs";
+import { InterceptingCall, Metadata } from "@grpc/grpc-js";
 
+/**
+ * 对拦截器的配置进行校验和设置默认值。
+ * @param opts
+ */
+function handleInterceptorOption(opts) {
+  const defaultValue = {enable: false, getaway: null, openapiDir: null}
+  const result = Object.assign(defaultValue, opts || {})
+  if (typeof result.getaway !== 'string' || result.getaway === '') {
+    throw new Error("Opt.getaway is a required parameter！")
+  }
+  if (typeof result.openapiDir !== 'string' || result.openapiDir === '') {
+    throw new Error("Opt.openapiDir is a required parameter！")
+  }
+  return result
+}
 
 /**
  * grpc client interceptor
@@ -44,19 +59,5 @@ export async function grpcGatewayProxyInterceptor ( opts) {
   }
 }
 
-/**
- * 对拦截器的配置进行校验和设置默认值。
- * @param opts
- */
-function handleInterceptorOption(opts) {
-  const defaultValue = {enable: false, getaway: null, openapiDir: null}
-  const result = Object.assign(defaultValue, opts || {})
-  if (typeof result.getaway !== 'string' || result.getaway === '') {
-    throw new Error("Opt.getaway is a required parameter！")
-  }
-  if (typeof result.openapiDir !== 'string' || result.openapiDir === '') {
-    throw new Error("Opt.openapiDir is a required parameter！")
-  }
-  return result
-}
+
 
