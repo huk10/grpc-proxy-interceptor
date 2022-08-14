@@ -13,11 +13,13 @@ export default {
   coverageProvider: "v8",
 
   testMatch: [
-    "**/__tests__/**/*.(mjs|cjs|js|ts|tsx|jsx)",
-    "**/?(*.)+(spec|test).(mjs|cjs|js|ts|tsx|jsx)"
-  ] ,
+    "**/__tests__/**/*.ts",
+    "**/?(*.)+(spec|test).ts"
+  ],
+
   transform: {
-    "^.+\\.(m|c)(t|j)sx?$": ["@swc/jest"],
+    // @swc/jest 还不支持 top await ？https://github.com/swc-project/swc-node/issues/383
+    "^.+\\.m?(t|j)sx?$": ["@swc/jest"],
   },
 
   moduleFileExtensions: ["ts", "tsx", "js", "mjs", "cjs", "jsx", "json", "node"],

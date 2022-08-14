@@ -1,17 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "esnext",
+    "target": "ES2022",
+    "module": "ESNext",
+    "outDir": "./lib",
     "moduleResolution": "Node",
+    "strict": true,
+    "declaration": true,
+    "skipLibCheck": true,
     "esModuleInterop": true,
     "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "declarationDir": "./types",
-    "declaration": true,
-    "outDir": "./lib",
     "types": ["jest"]
   },
-  "exclude": ["**/*.test.ts", "types"]
+  "exclude": ["node_modules"]
 }

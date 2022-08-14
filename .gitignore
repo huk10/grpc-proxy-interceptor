@@ -1,11 +1,13 @@
 *.iml
-openapi3
-build
+.DS_Store
 .idea
-openapi/
-test
 .vscode
 
+
+build
 node_modules
-.DS_Store
 coverage
+openapi3
+test
+
+

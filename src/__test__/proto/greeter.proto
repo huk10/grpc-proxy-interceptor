@@ -1,0 +1,56 @@
+syntax = "proto3";
+package example.greeter.v1.services;
+option go_package = "example/greeter;greeter";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+service Greeter {
+    // 客户端 在 request 中 给出一个 name， 服务端会响应 hello 「name」
+    rpc SayHello (HelloRequest) returns (HelloReply) {
+        option (google.api.http) = {
+            get: "/v1/sayHello/{name}"
+        };
+    }
+    // 客户端同时在metadata中和request中发送metadata，服务器会进行比较，如果相同返回 ok
+    rpc EqMetadata(MetadataRequest) returns (EqMetadataResponse) {
+        option (google.api.http) = {
+            post: "/v1/eqMetadata"
+        };
+    }
+    // 客户端在 request 中给出 metadata 服务端会在响应中设置 metadata，客户端可以进行比较
+    rpc Metadata(MetadataRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            get: "/v1/metadata"
+        };
+    }
+    // 客户端在 request 中给出一个状态码和错误信息，服务端会已对应的状态码进行响应
+    rpc Status(StatusRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            get: "/v1/status"
+        };
+    }
+}
+
+message EqMetadataResponse {
+    bool ok = 1;
+}
+
+message MetadataRequest {
+    map<string, string > metadata = 1;
+}
+
+message StatusRequest {
+    int32 status = 1;
+    string error_msg = 2;
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+    string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+    string message = 1;
+}
