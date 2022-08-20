@@ -9,12 +9,8 @@
       "name": "example.greeter.v1.services.Greeter"
     }
   ],
-  "consumes": [
-    "application/json"
-  ],
-  "produces": [
-    "application/json"
-  ],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
   "paths": {
     "/v1/sayHello/{name}": {
       "get": {
@@ -42,9 +38,7 @@
             "type": "string"
           }
         ],
-        "tags": [
-          "example.greeter.v1.services.Greeter"
-        ]
+        "tags": ["example.greeter.v1.services.Greeter"]
       }
     }
   },

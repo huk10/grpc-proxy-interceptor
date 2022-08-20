@@ -1,0 +1,18 @@
+syntax = "proto3";
+package example.greeter.v1.services;
+option go_package = "example/greeter;greeter";
+
+service Greeter {
+    // 客户端 在 request 中 给出一个 name， 服务端会响应 hello 「name」
+    rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+    string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+    string message = 1;
+}

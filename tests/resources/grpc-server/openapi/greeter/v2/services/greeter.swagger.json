@@ -1,0 +1,266 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "greeter/v2/services/greeter.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "example.greeter.v2.services.Greeter"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/example.greeter.v2.services.Greeter/EqMetadata": {
+      "post": {
+        "summary": "客户端同时在metadata中和request中发送metadata，服务器会进行比较，如果相同返回 ok",
+        "operationId": "Greeter_EqMetadata",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/example.greeter.v2.services.EqMetadataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/example.greeter.v2.services.MetadataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "example.greeter.v2.services.Greeter"
+        ]
+      }
+    },
+    "/example.greeter.v2.services.Greeter/Metadata": {
+      "post": {
+        "summary": "客户端在 request 中给出 metadata 服务端会在响应中设置 metadata，客户端可以进行比较",
+        "operationId": "Greeter_Metadata",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/example.greeter.v2.services.MetadataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "example.greeter.v2.services.Greeter"
+        ]
+      }
+    },
+    "/example.greeter.v2.services.Greeter/SayHello": {
+      "post": {
+        "summary": "客户端 在 request 中 给出一个 name， 服务端会响应 hello 「name」",
+        "operationId": "Greeter_SayHello",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/example.greeter.v2.services.HelloReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/example.greeter.v2.services.HelloRequest"
+            }
+          }
+        ],
+        "tags": [
+          "example.greeter.v2.services.Greeter"
+        ]
+      }
+    },
+    "/example.greeter.v2.services.Greeter/Status": {
+      "post": {
+        "summary": "客户端在 request 中给出一个状态码和错误信息，服务端会已对应的状态码进行响应",
+        "operationId": "Greeter_Status",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/example.greeter.v2.services.StatusRequest"
+            }
+          }
+        ],
+        "tags": [
+          "example.greeter.v2.services.Greeter"
+        ]
+      }
+    },
+    "/example.greeter.v2.services.Greeter/Trailer": {
+      "post": {
+        "summary": "客户端在 request 中给出 metadata 服务端会在响应中设置 metadata，客户端可以进行比较",
+        "operationId": "Greeter_Trailer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/example.greeter.v2.services.MetadataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "example.greeter.v2.services.Greeter"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "example.greeter.v2.services.EqMetadataResponse": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        }
+      }
+    },
+    "example.greeter.v2.services.HelloReply": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "title": "The response message containing the greetings"
+    },
+    "example.greeter.v2.services.HelloRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "description": "The request message containing the user's name."
+    },
+    "example.greeter.v2.services.MetadataRequest": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "example.greeter.v2.services.StatusRequest": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "errorMsg": {
+          "type": "string"
+        }
+      }
+    },
+    "google.protobuf.Any": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "google.rpc.Status": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/google.protobuf.Any"
+          }
+        }
+      }
+    }
+  }
+}

@@ -5,9 +5,8 @@
 
 
 build
+dist
 node_modules
 coverage
-openapi3
-test
 
 
