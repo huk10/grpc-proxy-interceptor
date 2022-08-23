@@ -1,6 +1,7 @@
 import { negate } from "./helper/utils";
 import { getProtoFileInDirectory } from "./helper/proto";
 import { basename, extname, resolve, sep } from "node:path";
+import { setTimeout } from "timers/promises";
 import { checkCommandIsExist, isExistBranch, shell } from "./helper/shell";
 import {
   defaultConfiguration,
@@ -84,6 +85,7 @@ class Generate {
     await this.runShell(`rm -rf ./${this.buildDir} && mkdir ${this.buildDir}`);
     for (const repo of this.gitRepository) {
       await this.cloneRepo(repo.url, repo.branch ?? "master", repo.source);
+      await setTimeout(1000);
     }
   }
 
