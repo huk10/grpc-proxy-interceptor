@@ -1,4 +1,4 @@
-## openapi-proxy
+## gprc-proxy-interceptor
 
 在不能直连 gRPC 端口时，通过 [grpc-getaway](https://github.com/grpc-ecosystem/grpc-gateway) 提供的 http 接口与 gRPC 后端通信。
 
