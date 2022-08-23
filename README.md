@@ -1,6 +1,11 @@
 ## openapi-proxy
 
-提供一个 gRPC 拦截器，在 gRPC 协议调用不可用时，通过 [grpc-getaway](https://github.com/grpc-ecosystem/grpc-gateway) 提供的 http 接口与 gRPC 后端通信。
+在不能直连 gRPC 端口时，通过 [grpc-getaway](https://github.com/grpc-ecosystem/grpc-gateway) 提供的 http 接口与 gRPC 后端通信。
+
+两个拦截器的使用场景：
+
+- `openapiInterceptor`： proto 文件中定义了 `google.api.http` 并且服务器提供了支持。
+- `interceptor`：gRPC 服务提供了 `grpc-web` 协议的支持。
 
 ## 工作原理
 
@@ -26,29 +31,43 @@
 1. 从 protobuf 文件中生成对应的 openapi 文件（ 也可以自行使用 protoc 命令生成 openapi 文件，[参考命令](#protoc-命令参考)）。
 
 ```javascript
-import {generate} from 'grpc-openapi-proxy-interceptor'
-await generate(configuration)
+await generate({
+  // 是否输出执行的命令（默认：false）
+  debug: false,
+  // openapi 文件输出目录
+  openapiDir: "openapi",
+  // 构建 openapi 的目录
+  buildDir: "openapi-proxy-build",
+  // 依赖的git仓库地址列表
+  gitRepository: [],
+  // 是否禁用 rm 命令（默认：false）
+  disabledRemoveCommand: false,
+});
 ```
 
 2. 在 grpc 客户端的 interceptors 中添加依赖即可。
 
 ```javascript
-import {grpcGatewayProxyInterceptor} from 'grpc-openapi-proxy-interceptor'
-const client = new grpc.Client('127.0.0.1:9091', grpc.credentials.createInsecure(), {
-  interceptors: [
-    await grpcGatewayProxyInterceptor({
-      enable: true,
-      getaway: '127.0.0.1:4501',
-      openapiDir: resolve(process.cwd(), './openapi'),
-    }),
-  ],
-})
+const client = new grpc.Client(
+  "127.0.0.1:9091",
+  grpc.credentials.createInsecure(),
+  {
+    interceptors: [
+      await openapiInterceptor({
+        enable: true,
+        getaway: "http://127.0.0.1:4501",
+        openapiDir: "openapi",
+      }),
+    ],
+  }
+);
 ```
 
 ## 已知问题。
 
 1. trailers metadata 现在可能有些问题。处理时发现接受的值有重复，还不知道原因。。
-2. grpc.status 状态码可能不准确。
+2. get 请求的 params 会使用 qs.stringify 进行转换。
+3. grpc.status 状态码可能不准确。
 
 ```text
 // 下面这两种 code 都会转换成 httpStatus.CONFLICT
@@ -70,40 +89,32 @@ const client = new grpc.Client('127.0.0.1:9091', grpc.credentials.createInsecure
 // status.DATA_LOSS
 ```
 
-3. get 请求的 params 会使用 qs.stringify 进行转换。
-4.
+## 使用方法
 
-## 配置选项
+**generate**
 
-配置可以填写在配置文件中，也可以在通过函数参数传递。
+| 参数名                | 是否必填 | 类型          | 默认值              | 描述                    |
+| --------------------- | -------- | ------------- | ------------------- | ----------------------- |
+| debug                 | 否       | Boolean       | false               | 是否输出执行的命令      |
+| openapiDir            | 否       | String        | openapi             | openapi 文件输出目录    |
+| buildDir              | 否       | String        | openapi-proxy-build | 构建 openapi 的目录     |
+| gitRepository         | 是       | Array<String> | 无                  | 依赖的 git 仓库地址列表 |
+| disabledRemoveCommand | 否       | String        | false               | 是否禁用 rm 命令        |
 
-配置文件使用 esm 语法，路径为 `resolve(process.cwd(), "./openapi-proxy.config.js")`
+**openapiInterceptor**
 
-配置会进行合并，优先级为：`default < openapi-proxy.config.js < function arguments`
+| 参数名     | 是否必填 | 类型                                                                         | 默认值  | 描述                 |
+| ---------- | -------- | ---------------------------------------------------------------------------- | ------- | -------------------- |
+| enable     | 否       | Boolean                                                                      | false   | 是否启用拦截器       |
+| getaway    | 是       | String or Function `(value: {filePath: string; callPath: string}) => string` | 无      | grpc 服务地址        |
+| openapiDir | 否       | String                                                                       | openapi | openapi 文件输出目录 |
 
-下面是默认配置项：
+**interceptor**
 
-```javascript
-/** @type {import("./src/type").Configuration} */
-const config = {
-  // 是否输出执行的命令（默认：false）
-  debug: false,
-  // 是否启用拦截器（默认：false）
-  enable: false,
-  // grpc-getaway 服务地址
-  getaway: '',
-  // openapi 文件输出目录
-  openapiDir: 'openapi',
-  // 构建 openapi 的目录
-  buildDir: 'openapi-proxy-build',
-  // 依赖的git仓库地址列表
-  gitRepository: [],
-  // 是否禁用 rm 命令（默认：false）
-  disabledRemoveCommand: false,
-}
-
-export default config
-```
+| 参数名  | 是否必填 | 类型                                              | 默认值 | 描述           |
+| ------- | -------- | ------------------------------------------------- | ------ | -------------- |
+| enable  | 否       | Boolean                                           | false  | 是否启用拦截器 |
+| getaway | 是       | String or Function `(callPath: string) => string` | 无     | grpc 服务地址  |
 
 ## protoc 命令参考
 
@@ -114,6 +125,6 @@ export default config
 ```shell
 protoc --proto_path=$PROTO_DIR \
          --openapiv2_out=$API_OUT_DIR \
-         --openapiv2_opt include_package_in_tags=true,openapi_naming_strategy=fqn \
+         --openapiv2_opt generate_unbound_methods=true,include_package_in_tags=true,openapi_naming_strategy=fqn \
          greeter/v1/services/greeter.proto
 ```

@@ -24,7 +24,7 @@ protoc --proto_path=$PROTO_DIR \
          --grpc-gateway_opt=paths=source_relative \
          --grpc-gateway_opt=generate_unbound_methods=true \
          --openapiv2_out=$API_OUT_DIR \
-         --openapiv2_opt include_package_in_tags=true,openapi_naming_strategy=fqn \
+         --openapiv2_opt generate_unbound_methods=true,include_package_in_tags=true,openapi_naming_strategy=fqn \
          greeter/v1/services/greeter.proto
 
 

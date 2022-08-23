@@ -1,27 +1,24 @@
-import commonjs from '@rollup/plugin-commonjs'
-import json from '@rollup/plugin-json'
-import typescript from '@rollup/plugin-typescript'
+import commonjs from "@rollup/plugin-commonjs";
+import json from "@rollup/plugin-json";
+import typescript from "@rollup/plugin-typescript";
 
 /** @type import('rollup').RollupOptions */
-const config = {
-  input: 'src/index.ts',
+const common = {
+  external: ["@grpc/proto-loader", "@grpc/grpc-js"],
+  plugins: [commonjs(), json(), typescript({ tsconfig: "./tsconfig.build.json" })],
+};
+
+export default {
+  input: "src/index.ts",
   output: [
     {
-      format: 'esm',
-      dir: 'lib',
+      format: "esm",
+      file: "lib/index.mjs",
     },
     {
-      format: 'cjs',
-      dir: 'lib',
+      format: "cjs",
+      file: "lib/index.js",
     },
   ],
-  external: ['@grpc/proto-loader', '@grpc/grpc-js'],
-  plugins: [commonjs(), json(), typescript({tsconfig: './tsconfig.build.json'})],
-}
-
-export default [
-  {
-    ...config,
-    input: '',
-  },
-]
+  ...common,
+};

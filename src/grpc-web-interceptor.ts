@@ -1,44 +1,60 @@
-import axios from 'axios'
-import {CallResult} from './shared/grpc-utils'
-import {httpStatus2GrpcStatus} from './shared/status-converts'
-import {InterceptingListener} from '@grpc/grpc-js/build/src/call-stream'
-import {InterceptingCall, Interceptor, InterceptorOptions, Metadata, status} from '@grpc/grpc-js'
-import {getMetadataFromHeader, getTrailersMetadata, toMetadataHeader} from './shared/openapi-utils'
-import {isValidUrl} from './helper/utils'
+import axios from "axios";
+import { CallResult } from "./shared/grpc-utils";
+import { httpStatus2GrpcStatus } from "./shared/status-converts";
+import { InterceptingListener } from "@grpc/grpc-js/build/src/call-stream";
+import {
+  InterceptingCall,
+  Interceptor,
+  InterceptorOptions,
+  Metadata,
+  status,
+} from "@grpc/grpc-js";
+import {
+  getMetadataFromHeader,
+  getTrailersMetadata,
+  toMetadataHeader,
+} from "./shared/openapi-utils";
+import { isValidUrl } from "./helper/utils";
 
-const proxy = axios.create()
+const proxy = axios.create();
 
 export interface InterceptorOption {
   // 是否开启拦截器
-  enable: boolean
+  enable: boolean;
   // 提供服务的服务器地址如：http://127.0.0.1:9090
-  getaway: string
+  getaway: string | ((callPath: string) => string);
 }
 
 function checkInterceptorOption(opt: InterceptorOption): InterceptorOption {
-  if (typeof opt.getaway !== 'string' || opt.getaway === '') {
-    throw new Error('opt.getaway is a required parameter！')
+  if (typeof opt.getaway === "string" && opt.getaway === "") {
+    throw new Error("opt.getaway is a required parameter！");
   }
-  if (!isValidUrl(opt.getaway)) {
-    throw new Error('Invalid opt.getaway ！')
+  if (typeof opt.getaway === "string" && !isValidUrl(opt.getaway)) {
+    throw new Error("Invalid opt.getaway ！");
   }
-  return opt
+  return opt;
 }
 
 // TODO 对 grpc.status 和 metadata 进行核对
-async function proxyTo(path: string, message: any, metadata: Metadata): Promise<CallResult<any>> {
+async function proxyTo(
+  path: string,
+  message: any,
+  metadata: Metadata
+): Promise<CallResult<any>> {
   try {
-    const result = await proxy.post(path, message, {headers: toMetadataHeader(metadata)})
-    const resultMetadata = getMetadataFromHeader(result.headers)
+    const result = await proxy.post(path, message, {
+      headers: toMetadataHeader(metadata),
+    });
+    const resultMetadata = getMetadataFromHeader(result.headers);
     return {
       response: result.data,
       metadata: resultMetadata,
       status: {
         code: httpStatus2GrpcStatus(result.status),
-        details: '',
+        details: "",
         metadata: getTrailersMetadata(result.request.res.rawTrailers),
       },
-    }
+    };
   } catch (err: any) {
     if (err.response) {
       return {
@@ -49,7 +65,7 @@ async function proxyTo(path: string, message: any, metadata: Metadata): Promise<
           details: err.response.data.message,
           code: httpStatus2GrpcStatus(err.response.status),
         },
-      }
+      };
     }
     return {
       response: null as unknown as Response,
@@ -59,7 +75,7 @@ async function proxyTo(path: string, message: any, metadata: Metadata): Promise<
         details: (err as Error).message,
         code: status.UNKNOWN,
       },
-    }
+    };
   }
 }
 
@@ -71,34 +87,42 @@ async function proxyTo(path: string, message: any, metadata: Metadata): Promise<
  */
 export function interceptor(opt: InterceptorOption): Interceptor {
   return function interceptorImpl(options, nextCall) {
-    const {enable, getaway} = checkInterceptorOption(opt)
+    const { enable, getaway } = checkInterceptorOption(opt);
     if (!enable) {
-      return new InterceptingCall(nextCall(options))
+      return new InterceptingCall(nextCall(options));
     }
     const ref = {
       message: null as unknown,
       metadata: new Metadata(),
       listener: {} as InterceptingListener,
-    }
+    };
     return new InterceptingCall(nextCall(options), {
       start: function (metadata, listener, next) {
-        ref.metadata = metadata
-        ref.listener = listener
+        ref.metadata = metadata;
+        ref.listener = listener;
       },
       sendMessage: async function (message, next) {
-        ref.message = message
+        ref.message = message;
       },
       halfClose: async function (next) {
-        const {metadata, message, listener} = ref
         // 这里的 message 是还没有被 protobuf 序列化的。
         // 注意此刻的 metadata 的 key 会被全部转换为小写，但是通过 get 方法取值时，是大小写不敏感的。
         // 此刻的 value 类型是 [MedataValue]
         // call 方法保证即使是内部错误，也会返回一个正确的结构
-        const result = await proxyTo(getaway + options.method_definition.path, message, metadata)
-        listener.onReceiveMessage(result.response)
-        listener.onReceiveMetadata(result.metadata)
-        listener.onReceiveStatus(result.status)
+        const { metadata, message, listener } = ref;
+        const baseUrl =
+          typeof getaway === "function"
+            ? getaway(options.method_definition.path)
+            : getaway;
+        const result = await proxyTo(
+          baseUrl + options.method_definition.path,
+          message,
+          metadata
+        );
+        listener.onReceiveMessage(result.response);
+        listener.onReceiveMetadata(result.metadata);
+        listener.onReceiveStatus(result.status);
       },
-    })
-  }
+    });
+  };
 }

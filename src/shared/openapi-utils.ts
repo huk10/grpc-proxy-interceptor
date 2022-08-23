@@ -1,49 +1,7 @@
-import {OpenAPIV2} from 'openapi-types'
-import {readFile} from 'node:fs/promises'
-import {Metadata} from '@grpc/grpc-js'
-import {toMetadata} from './grpc-utils'
-
-interface OpenAPIDefinition {
-  path: string
-  operationId: string
-  document: OpenAPIV2.Document
-  parameters: OpenAPIV2.Parameters[]
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
-}
-
-/**
- * 从 openapi v2 定义中查找需要的信息
- * @param documents {OpenAPIV2.Document[]}
- * @param tag {string}
- * @param operationId {string}
- */
-export function findOpenapiDocument(
-  documents: OpenAPIV2.Document[],
-  tag: string,
-  operationId: string
-): OpenAPIDefinition | null {
-  for (const document of documents) {
-    if (document.tags?.some(val => val.name === tag)) {
-      for (const [path, methods] of Object.entries(document.paths)) {
-        for (const [method, spec] of Object.entries(methods)) {
-          // @ts-ignore
-          if (spec.operationId === operationId) {
-            return {
-              document,
-              path,
-              // @ts-ignore
-              method: method.toUpperCase(),
-              operationId,
-              // @ts-ignore
-              parameters: spec.parameters,
-            }
-          }
-        }
-      }
-    }
-  }
-  return null
-}
+import { OpenAPIV2 } from "openapi-types";
+import { readFile } from "node:fs/promises";
+import { Metadata } from "@grpc/grpc-js";
+import { toMetadata } from "./grpc-utils";
 
 /**
  * 处理 URL 上 的params
@@ -51,15 +9,18 @@ export function findOpenapiDocument(
  * @param data {object}
  * @return {{[key: string]: string} | null}
  */
-export function handleParameters(parameters: OpenAPIV2.Parameters[], data: unknown): Record<string, string> | null {
+export function handleParameters(
+  parameters: OpenAPIV2.Parameters[],
+  data: unknown
+): Record<string, string> | null {
   if (!Array.isArray(parameters)) {
-    return null
+    return null;
   }
   return parameters.reduce((param, schema) => {
     // @ts-ignore
-    param[schema.name] = data[schema.name]
-    return param
-  }, {})
+    param[schema.name] = data[schema.name];
+    return param;
+  }, {});
 }
 
 /**
@@ -72,12 +33,12 @@ export function toMetadataHeader(metadata: Metadata): Record<string, string> {
   // buffer 的 header axios 不支持吗？
   return Object.entries(metadata.toHttp2Headers()).reduce(
     (headers, [key, value]) => {
-      headers[`Grpc-Metadata-${key}`] = value as unknown as string
-      return headers
+      headers[`Grpc-Metadata-${key}`] = value as unknown as string;
+      return headers;
     },
     // 必须加这个头才能接收到 trailers headers
-    {TE: 'trailers'} as Record<string, string>
-  )
+    { TE: "trailers" } as Record<string, string>
+  );
 }
 
 /**
@@ -86,30 +47,32 @@ export function toMetadataHeader(metadata: Metadata): Record<string, string> {
  * @param headers {{[key: string]: string}}
  * @return {Metadata}
  */
-export function getMetadataFromHeader(headers: Record<string, string>): Metadata {
+export function getMetadataFromHeader(
+  headers: Record<string, string>
+): Metadata {
   const kv = Object.entries(headers)
-    .filter(([value]) => value.startsWith('grpc-metadata-'))
+    .filter(([value]) => value.startsWith("grpc-metadata-"))
     .reduce((prev, [key, value]) => {
-      prev[key.replace(/^grpc-metadata-/, '')] = value as string
-      return prev
-    }, {} as Record<string, string>)
-  return toMetadata(kv)
+      prev[key.replace(/^grpc-metadata-/, "")] = value as string;
+      return prev;
+    }, {} as Record<string, string>);
+  return toMetadata(kv);
 }
 
 // FIXME trailers 为什么会重复呢？这不知道咋处理了。暂时先只取一个值
 export function getTrailersMetadata(rawHeaders: string[]): Metadata {
-  const record = {}
+  const record = {};
   for (let i = 0, len = rawHeaders.length; i < len; i += 2) {
     // @ts-ignore
     // record[rawHeaders[i]] = Array.isArray(record[rawHeaders[i]]) ? record[rawHeaders[i]].concat(rawHeaders[i+1]) : [rawHeaders[i+1]]
-    record[rawHeaders[i]] = rawHeaders[i + 1]
+    record[rawHeaders[i]] = rawHeaders[i + 1];
   }
   return toMetadata(
     Object.entries(record).reduce((header, [key, value]) => {
-      header[key.replace(/^Grpc-Trailer-/, '')] = value as string
-      return header
+      header[key.replace(/^Grpc-Trailer-/, "")] = value as string;
+      return header;
     }, {} as Record<string, string>)
-  )
+  );
 }
 
 /**
@@ -117,7 +80,9 @@ export function getTrailersMetadata(rawHeaders: string[]): Metadata {
  * @param url {string}
  * @return {Promise<OpenAPIV2.Document>}
  */
-export async function parseOpenApiSpec(url: string): Promise<OpenAPIV2.Document> {
-  const str = await readFile(url, 'utf8')
-  return JSON.parse(str)
+export async function parseOpenApiSpec(
+  url: string
+): Promise<OpenAPIV2.Document> {
+  const str = await readFile(url, "utf8");
+  return JSON.parse(str);
 }
