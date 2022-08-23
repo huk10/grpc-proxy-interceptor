@@ -1,6 +1,6 @@
 {
   "name": "@io-huk/grpc-proxy-interceptor",
-  "version": "0.0.1.beta",
+  "version": "0.0.1-beta.0",
   "type": "module",
   "main": "./lib/index.js",
   "module": "./lib/index.mjs",
