@@ -10,3 +10,6 @@ import { OpenapiInterceptorOptions } from "./shared/configuration";
 export declare function openapiInterceptor(
   opts: OpenapiInterceptorOptions
 ): Promise<Interceptor>;
+export declare function openapiInterceptorSync(
+  opts: OpenapiInterceptorOptions
+): Interceptor;

@@ -1,4 +1,4 @@
-import {exec} from 'node:child_process'
+import { exec } from "node:child_process";
 
 /**
  * 执行一个 shell 命令
@@ -8,11 +8,11 @@ import {exec} from 'node:child_process'
 export function shell(command: string): Promise<string> {
   return new Promise((resolve, reject) => {
     exec(command, (error, stdout, stderr) => {
-      if (error) reject(error)
-      if (stderr) reject(error)
-      resolve(stdout)
-    })
-  })
+      if (error) return reject(error);
+      if (!!stderr && stderr !== "null") return reject(stderr);
+      resolve(stdout);
+    });
+  });
 }
 
 /**
@@ -21,7 +21,7 @@ export function shell(command: string): Promise<string> {
  * @return {Promise<string>}
  */
 export function which(command: string): Promise<string> {
-  return shell(`which ${command}`)
+  return shell(`which ${command}`);
 }
 
 /**
@@ -32,7 +32,7 @@ export function which(command: string): Promise<string> {
 export function checkCommandIsExist(command: string): Promise<boolean> {
   return which(command)
     .then(() => true)
-    .catch(() => false)
+    .catch(() => false);
 }
 
 /**
@@ -40,7 +40,12 @@ export function checkCommandIsExist(command: string): Promise<boolean> {
  * @param repo {string} - git 仓库地址
  * @param branch {string} - 指定的远程仓库
  */
-export async function isExistBranch(repo: string, branch: string): Promise<boolean> {
-  const result = await shell(`git ls-remote --heads ${repo} ${branch} --exit-code`)
-  return !!result
+export async function isExistBranch(
+  repo: string,
+  branch: string
+): Promise<boolean> {
+  const result = await shell(
+    `git ls-remote --heads ${repo} ${branch} --exit-code`
+  );
+  return !!result;
 }

@@ -92,3 +92,44 @@ export async function openapiInterceptor(
     });
   };
 }
+
+export function openapiInterceptorSync(
+  opts: OpenapiInterceptorOptions
+): Interceptor {
+  const apiProxyRef = { apiProxy: null as unknown as ApiProxy };
+  initInterceptor(opts).then((res) => (apiProxyRef.apiProxy = res));
+  return function interceptorImpl(options, nextCall) {
+    if (!apiProxyRef.apiProxy?.enable || !apiProxyRef.apiProxy?.loadDone) {
+      return new InterceptingCall(nextCall(options));
+    }
+    const ref = {
+      message: null as unknown,
+      metadata: new Metadata(),
+      listener: {} as InterceptingListener,
+    };
+    return new InterceptingCall(nextCall(options), {
+      start: function (metadata, listener, next) {
+        ref.metadata = metadata;
+        ref.listener = listener;
+      },
+      sendMessage: async function (message, next) {
+        ref.message = message;
+      },
+      halfClose: async function (next) {
+        const { metadata, message, listener } = ref;
+        // 这里的 message 是还没有被 protobuf 序列化的。
+        // 注意此刻的 metadata 的 key 会被全部转换为小写，但是通过 get 方法取值时，是大小写不敏感的。
+        // 此刻的 value 类型是 [MedataValue]
+        // call 方法保证即使是内部错误，也会返回一个正确的结构
+        const result = await apiProxyRef.apiProxy.call(
+          options.method_definition.path,
+          metadata,
+          message
+        );
+        listener.onReceiveMessage(result.response);
+        listener.onReceiveMetadata(result.metadata);
+        listener.onReceiveStatus(result.status);
+      },
+    });
+  };
+}

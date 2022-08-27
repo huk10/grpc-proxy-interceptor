@@ -7,6 +7,8 @@ export interface GenerateOptions {
   debug?: boolean;
   openapiDir?: string;
   buildDir?: string;
+  accessToken?: string;
+  extraProtoIncludeDirs?: string[];
   disabledRemoveCommand?: boolean;
   gitRepository?: Array<Repository>;
 }

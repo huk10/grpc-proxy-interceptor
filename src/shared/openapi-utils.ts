@@ -31,7 +31,7 @@ export function handleParameters(
  */
 export function toMetadataHeader(metadata: Metadata): Record<string, string> {
   // buffer 的 header axios 不支持吗？
-  return Object.entries(metadata.toHttp2Headers()).reduce(
+  return Object.entries(metadata.getMap()).reduce(
     (headers, [key, value]) => {
       headers[`Grpc-Metadata-${key}`] = value as unknown as string;
       return headers;

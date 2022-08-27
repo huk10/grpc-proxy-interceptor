@@ -1,3 +1,5 @@
+import { sep } from "node:path";
+
 export interface Repository {
   // git 仓库地址
   url: string;
@@ -14,6 +16,9 @@ export interface GenerateOptions {
   openapiDir?: string;
   // 目录名称-不包含路径（默认：openapi-proxy-build）
   buildDir?: string;
+  // git oauth2 token
+  accessToken?: string;
+  extraProtoIncludeDirs?: string[];
   // 是否禁用 rm 命令（默认：false）
   disabledRemoveCommand?: boolean;
   // 依赖的git仓库地址列表
@@ -46,4 +51,5 @@ export const defaultConfiguration: Configuration = {
   openapiDir: "openapi",
   buildDir: "openapi-proxy-build",
   disabledRemoveCommand: false,
+  extraProtoIncludeDirs: [],
 };
