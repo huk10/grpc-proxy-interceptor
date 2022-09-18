@@ -28,22 +28,7 @@
 
 可以参考 [example](./example) 中的用法。
 
-1. 从 protobuf 文件中生成对应的 openapi 文件（ 也可以自行使用 protoc 命令生成 openapi 文件，[参考命令](#protoc-命令参考)）。
-
-```javascript
-await generate({
-  // 是否输出执行的命令（默认：false）
-  debug: false,
-  // openapi 文件输出目录
-  openapiDir: "openapi",
-  // 构建 openapi 的目录
-  buildDir: "openapi-proxy-build",
-  // 依赖的git仓库地址列表
-  gitRepository: [],
-  // 是否禁用 rm 命令（默认：false）
-  disabledRemoveCommand: false,
-});
-```
+1. 自行使用 protoc 命令从 protobuf 文件中生成对应的 openapi 文件，[参考命令](#protoc-命令参考)）。
 
 2. 在 grpc 客户端的 interceptors 中添加依赖即可。
 
@@ -90,16 +75,6 @@ const client = new grpc.Client(
 ```
 
 ## 使用方法
-
-**generate**
-
-| 参数名                | 是否必填 | 类型          | 默认值              | 描述                    |
-| --------------------- | -------- | ------------- | ------------------- | ----------------------- |
-| debug                 | 否       | Boolean       | false               | 是否输出执行的命令      |
-| openapiDir            | 否       | String        | openapi             | openapi 文件输出目录    |
-| buildDir              | 否       | String        | openapi-proxy-build | 构建 openapi 的目录     |
-| gitRepository         | 是       | Array<String> | 无                  | 依赖的 git 仓库地址列表 |
-| disabledRemoveCommand | 否       | String        | false               | 是否禁用 rm 命令        |
 
 **openapiInterceptor**
 

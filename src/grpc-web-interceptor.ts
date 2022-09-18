@@ -1,20 +1,14 @@
 import axios from "axios";
-import { CallResult } from "./shared/grpc-utils";
-import { httpStatus2GrpcStatus } from "./shared/status-converts";
-import { InterceptingListener } from "@grpc/grpc-js/build/src/call-stream";
+import { isValidUrl } from "./helper";
 import {
-  InterceptingCall,
-  Interceptor,
-  InterceptorOptions,
-  Metadata,
-  status,
-} from "@grpc/grpc-js";
-import {
+  CallResult,
   getMetadataFromHeader,
   getTrailersMetadata,
+  httpStatus2GrpcStatus,
   toMetadataHeader,
-} from "./shared/openapi-utils";
-import { isValidUrl } from "./helper/utils";
+} from "./openapi-proxy-impl";
+import { InterceptingListener } from "@grpc/grpc-js/build/src/call-stream";
+import { InterceptingCall, Interceptor, Metadata, status } from "@grpc/grpc-js";
 
 const proxy = axios.create();
 

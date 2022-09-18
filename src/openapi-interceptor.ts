@@ -1,11 +1,24 @@
-import { isValidUrl } from "./helper/utils";
-import { ApiProxy } from "./shared/openapi-proxy";
+import { isValidUrl } from "./helper";
+import { ApiProxy, Getaway } from "./openapi-proxy-impl";
 import { InterceptingCall, Interceptor, Metadata } from "@grpc/grpc-js";
 import { InterceptingListener } from "@grpc/grpc-js/build/src/call-stream";
-import {
-  defaultConfiguration,
-  OpenapiInterceptorOptions,
-} from "./shared/configuration";
+
+// 拦截器的配置选项
+interface OpenapiInterceptorOptions {
+  // grpc-gateway 服务地址
+  getaway: Getaway;
+  // 是否开启拦截器
+  enable: boolean;
+  // openapi 目录
+  openapiDir: string;
+}
+
+// 默认配置
+const defaultConfiguration = {
+  enable: false,
+  getaway: "",
+  openapiDir: "openapi",
+};
 
 /**
  * 对拦截器的配置进行校验和设置默认值。
