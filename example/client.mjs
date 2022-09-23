@@ -31,8 +31,6 @@ const client = new GreeterClient(
   {
     interceptors: [
       await openapiInterceptor({
-        // 是否启用拦截器
-        enable: true,
         // grpc-getaway 服务地址
         getaway: "http://127.0.0.1:4501",
         // openapi 文件输出目录

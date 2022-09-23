@@ -5,7 +5,7 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 
 /** @type import('rollup').RollupOptions */
 const common = {
-  // external: ["@grpc/proto-loader", "@grpc/grpc-js"],
+  external: ["@grpc/grpc-js", "axios"],
   plugins: [json(), commonjs(), nodeResolve(), typescript({ tsconfig: "./tsconfig.build.json" })],
 };
 

@@ -5,7 +5,7 @@ import { UnaryCallback } from "@grpc/grpc-js/build/src/client";
 import { ClientUnaryCall } from "@grpc/grpc-js/build/src/call";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { StatusObject } from "@grpc/grpc-js/src/call-stream";
-import { toMetadata } from "../../src/openapi-proxy-impl";
+import { toMetadata } from "../../src/grpc-utils";
 
 export interface GreeterClient extends ServiceClient {
   SayHello(

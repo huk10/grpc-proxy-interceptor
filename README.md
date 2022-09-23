@@ -28,7 +28,7 @@
 
 可以参考 [example](./example) 中的用法。
 
-1. 自行使用 protoc 命令从 protobuf 文件中生成对应的 openapi 文件，[参考命令](#protoc-命令参考)）。
+1. 自行使用 protoc 命令从 protobuf 文件中生成对应的 openapi 文件，[参考命令](#protoc-命令参考)。
 
 2. 在 grpc 客户端的 interceptors 中添加依赖即可。
 
@@ -39,9 +39,8 @@ const client = new grpc.Client(
   {
     interceptors: [
       await openapiInterceptor({
-        enable: true,
-        getaway: "http://127.0.0.1:4501",
         openapiDir: "openapi",
+        getaway: "http://127.0.0.1:4501",
       }),
     ],
   }
@@ -80,7 +79,6 @@ const client = new grpc.Client(
 
 | 参数名     | 是否必填 | 类型                                                                         | 默认值  | 描述                 |
 | ---------- | -------- | ---------------------------------------------------------------------------- | ------- | -------------------- |
-| enable     | 否       | Boolean                                                                      | false   | 是否启用拦截器       |
 | getaway    | 是       | String or Function `(value: {filePath: string; callPath: string}) => string` | 无      | grpc 服务地址        |
 | openapiDir | 否       | String                                                                       | openapi | openapi 文件输出目录 |
 

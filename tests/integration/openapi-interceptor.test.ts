@@ -1,11 +1,11 @@
-import {GreeterClient, testGrpcRequest} from './testlist'
-import {clientWithInterceptor} from '../resources/client/client'
+import { GreeterClient, testGrpcRequest } from "./testlist";
+import { clientWithInterceptor } from "../resources/client/client";
 
-let client = null as unknown as GreeterClient
+let client = null as unknown as GreeterClient;
 beforeAll(async () => {
-  client = (await clientWithInterceptor()) as GreeterClient
-})
+  client = clientWithInterceptor() as GreeterClient;
+});
 
 describe(`openapi-interceptor.ts`, () => {
-  testGrpcRequest(() => client)
-})
+  testGrpcRequest(() => client);
+});

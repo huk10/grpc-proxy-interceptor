@@ -1,9 +1,9 @@
 import { resolve } from "node:path";
 import * as grpc from "@grpc/grpc-js";
+import { interceptor } from "../../../src";
 import { fileURLToPath, URL } from "node:url";
 import * as protoLoader from "@grpc/proto-loader";
-import { interceptor } from "../../../src/grpc-web-interceptor";
-import { openapiInterceptor as openapiInterceptor } from "../../../src/openapi-interceptor";
+import { openapiInterceptorSync } from "../../../src";
 
 const dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -52,15 +52,13 @@ export const client = new GreeterClient(
   grpc.credentials.createInsecure()
 );
 
-export async function clientWithInterceptor() {
+export function clientWithInterceptor() {
   return new GreeterClient(
     "127.0.0.1:9091",
     grpc.credentials.createInsecure(),
     {
       interceptors: [
-        await openapiInterceptor({
-          // 是否启用拦截器
-          enable: true,
+        openapiInterceptorSync({
           // grpc-getaway 服务地址
           getaway: "http://127.0.0.1:4501",
           // openapi 文件输出目录
@@ -72,13 +70,14 @@ export async function clientWithInterceptor() {
 }
 
 // 服务端支持 gRPC-Web 协议
-export async function clientWithGrpcWeb() {
+export function clientWithGrpcWeb() {
   return new GreeterClientV2(
     "127.0.0.1:9091",
     grpc.credentials.createInsecure(),
     {
       interceptors: [
         interceptor({
+          enable: true,
           // grpc-getaway 服务地址
           getaway: "http://127.0.0.1:4501",
         }),
@@ -86,31 +85,3 @@ export async function clientWithGrpcWeb() {
     }
   );
 }
-
-//
-// function toMetadata(metadata1) {
-//   const metadata = new Metadata();
-//   for (const [key, value] of Object.entries(metadata1)) {
-//     metadata.set(key, value);
-//   }
-//   return metadata;
-// }
-// const record = { code: "1234", buf: "buffer", hello: "word" };
-// const rmd = toMetadata(record);
-//
-// // const emitter = client.SayHello({ name: "Li Ming" }, rmd, (err, res) => {
-// // const emitter = client.Metadata({metadata: record}, rmd, (err, res) => {
-// // const emitter = client.Status({status: status.INTERNAL, errorMsg: "hihhii"}, rmd, (err, res) => {
-// // const emitter = client.Metadata({metadata: record}, rmd, (err, res) => {
-// const emitter = client.Trailer({ metadata: record }, rmd, (err, res) => {
-//   if (err) {
-//     return console.log("error:", err);
-//   }
-//   console.log("result:", res);
-// });
-// emitter.on("status", (status) => {
-//   console.log("status:", status);
-// });
-// emitter.on("metadata", (md) => {
-//   console.log("metadata:", md);
-// });

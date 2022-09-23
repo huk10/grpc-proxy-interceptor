@@ -1,22 +1,30 @@
 import axios from "axios";
 import { isValidUrl } from "./helper";
+import { CallResult } from "./grpc-utils";
+import { InterceptingListener } from "@grpc/grpc-js/build/src/call-stream";
+import { InterceptingCall, Interceptor, Metadata, status } from "@grpc/grpc-js";
 import {
-  CallResult,
   getMetadataFromHeader,
   getTrailersMetadata,
   httpStatus2GrpcStatus,
   toMetadataHeader,
-} from "./openapi-proxy-impl";
-import { InterceptingListener } from "@grpc/grpc-js/build/src/call-stream";
-import { InterceptingCall, Interceptor, Metadata, status } from "@grpc/grpc-js";
+} from "./openapi-utils";
 
 const proxy = axios.create();
 
 export interface InterceptorOption {
   // 是否开启拦截器
-  enable: boolean;
+  enable?: boolean;
   // 提供服务的服务器地址如：http://127.0.0.1:9090
   getaway: string | ((callPath: string) => string);
+}
+
+function getRequestUrl(
+  getaway: InterceptorOption["getaway"],
+  callPath: string
+) {
+  const baseUrl = typeof getaway === "function" ? getaway(callPath) : getaway;
+  return baseUrl + callPath;
 }
 
 function checkInterceptorOption(opt: InterceptorOption): InterceptorOption {
@@ -81,10 +89,17 @@ async function proxyTo(
  */
 export function interceptor(opt: InterceptorOption): Interceptor {
   return function interceptorImpl(options, nextCall) {
+    const callPath = options.method_definition.path;
     const { enable, getaway } = checkInterceptorOption(opt);
     if (!enable) {
       return new InterceptingCall(nextCall(options));
     }
+    // grpc-web 是支持 responseStream 的
+    if (options.method_definition.requestStream) {
+      console.warn(`${callPath}: 不支持流式调用!`);
+      return new InterceptingCall(nextCall(options));
+    }
+
     const ref = {
       message: null as unknown,
       metadata: new Metadata(),
@@ -104,15 +119,12 @@ export function interceptor(opt: InterceptorOption): Interceptor {
         // 此刻的 value 类型是 [MedataValue]
         // call 方法保证即使是内部错误，也会返回一个正确的结构
         const { metadata, message, listener } = ref;
-        const baseUrl =
-          typeof getaway === "function"
-            ? getaway(options.method_definition.path)
-            : getaway;
         const result = await proxyTo(
-          baseUrl + options.method_definition.path,
+          getRequestUrl(getaway, callPath),
           message,
           metadata
         );
+        // 下面方法的顺序是有要求的。
         listener.onReceiveMessage(result.response);
         listener.onReceiveMetadata(result.metadata);
         listener.onReceiveStatus(result.status);

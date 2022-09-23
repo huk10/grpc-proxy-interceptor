@@ -1,7 +1,8 @@
-import * as protoLoader from "@grpc/proto-loader";
-import { exec } from "node:child_process";
-import { readdir, stat } from "node:fs/promises";
 import { resolve } from "node:path";
+import { readdirSync, statSync } from "fs";
+import { readdir, stat } from "node:fs/promises";
+
+type Callback = (url: string) => void | Promise<void>;
 
 /**
  * 获取目录下所有文件
@@ -39,9 +40,9 @@ async function getAllTheFilesInTheDirectory(path: string): Promise<string[]> {
  * @param uri {string} - 目录绝对路径
  * @param callback {(url: string) => void | Promise<void>}
  */
-export async function fsForEach(
+export async function forEachDirectory(
   uri: string,
-  callback: (url: string) => void | Promise<void>
+  callback: Callback
 ): Promise<void> {
   const paths = await getAllTheFilesInTheDirectory(uri);
   for (const path of paths) {
@@ -50,22 +51,32 @@ export async function fsForEach(
 }
 
 /**
- * 对目录下文件进行过滤
- * @param uri {string} - 目录绝对路径
- * @param callback {(url: string) => boolean | Promise<boolean>}
- * @return {Promise<string[]>}
+ * 同步对目录下文件进行遍历
+ * @param {string} path
+ * @param {Callback} callback
  */
-export async function fsFilter(
-  uri: string,
-  callback: (url: string) => boolean | Promise<boolean>
-): Promise<string[]> {
-  const array = [];
-  for (const path of await getAllTheFilesInTheDirectory(uri)) {
-    if (await callback(path)) {
-      array.push(path);
+export function forEachDirectorySync(path: string, callback: Callback) {
+  const stack: string[] = [path];
+  const pathStat = statSync(path);
+  const defaultIgnore = ["node_modules", ".git", ".vscode", ".idea"];
+  if (!pathStat.isDirectory()) {
+    return;
+  }
+  while (stack.length > 0) {
+    const url = stack.pop() as string;
+    const dirs = readdirSync(url);
+    for (const part of dirs) {
+      const nextUri = resolve(url, part);
+      const info = statSync(nextUri);
+      if (info.isDirectory() && !defaultIgnore.includes(part)) {
+        stack.push(nextUri);
+        continue;
+      }
+      if (info.isFile()) {
+        callback(nextUri);
+      }
     }
   }
-  return array;
 }
 
 /**
@@ -83,105 +94,17 @@ export async function checkPathIsExist(url: string): Promise<boolean> {
 }
 
 /**
- * 是否存在 Service 定义
- * @param proto {string} - protobuf 文件地址
- * @param options {protoLoader.Options} - protoLoader.load 的options参数
+ * 同步检查路径是否存在
+ * @param url {string} - 绝对路径
  * @return {Promise<boolean>}
  */
-export async function isExistService(
-  proto: string,
-  options: protoLoader.Options = {}
-): Promise<boolean> {
-  const packageDefinition = await protoLoader.load(proto, options);
-  for (const key of Object.keys(packageDefinition)) {
-    // 如果存在 format 属性就不是一个 Service 结构
-    if (!packageDefinition[key].format) {
-      return true;
-    }
+export async function checkPathIsExistSync(url: string): Promise<boolean> {
+  try {
+    statSync(url);
+    return true;
+  } catch (err) {
+    return false;
   }
-  return false;
-}
-
-/**
- * 获取目录下所有的 proto 文件（仅包含 rpc service 的 proto 文件）
- * @param uri {string} - proto 存放路径。
- * @param [includeDirs] {string[]} proto 文件中 import 其他 proto 的相对目录
- * @return {Promise<string[]>}
- */
-export async function getProtoFileInDirectory(
-  uri: string,
-  includeDirs?: string[]
-): Promise<string[]> {
-  return fsFilter(uri, async (proto) => {
-    if (!proto.endsWith(".proto")) return false;
-    return isExistService(proto, {
-      // 一般来说 includeDirs 就是其根目录
-      includeDirs: Array.isArray(includeDirs) ? includeDirs : [uri],
-    });
-  });
-}
-
-/**
- * 执行一个 shell 命令
- * @param command {string}
- * @return {Promise<string>}
- */
-export function shell(command: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) return reject(error);
-      if (!!stderr && stderr !== "null") return reject(stderr);
-      resolve(stdout);
-    });
-  });
-}
-
-/**
- * 获取一个命令的 PATH
- * @param command {string}
- * @return {Promise<string>}
- */
-export function which(command: string): Promise<string> {
-  return shell(`which ${command}`);
-}
-
-/**
- * 检查一个命令是否存在
- * @param command {string}
- * @return {Promise<boolean>}
- */
-export function checkCommandIsExist(command: string): Promise<boolean> {
-  return which(command)
-    .then(() => true)
-    .catch(() => false);
-}
-
-/**
- * 检查 git 仓库是否存在指定的远程分支。
- * @param repo {string} - git 仓库地址
- * @param branch {string} - 指定的远程仓库
- */
-export async function isExistBranch(
-  repo: string,
-  branch: string
-): Promise<boolean> {
-  const result = await shell(
-    `git ls-remote --heads ${repo} ${branch} --exit-code`
-  );
-  return !!result;
-}
-
-/**
- * 对 Promise<boolean> 进行取反
- * @param value {Promise<boolean>|boolean}
- * @return {Promise<boolean>}
- */
-
-export async function negate(
-  value: Promise<boolean> | boolean
-): Promise<boolean> {
-  const result = await value;
-  return !result;
 }
 
 /**

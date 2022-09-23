@@ -1,18 +1,19 @@
 package main
 
 import (
-	"context"
-	greeter "example/genproto/greeter/v1/services"
-	"fmt"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
-	"log"
-	"net"
-	"net/http"
+  "context"
+  greeter "example/genproto/greeter/v1/services"
+  "fmt"
+  "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+  "google.golang.org/grpc"
+  "google.golang.org/grpc/codes"
+  "google.golang.org/grpc/credentials/insecure"
+  "google.golang.org/grpc/metadata"
+  "google.golang.org/grpc/reflection"
+  "google.golang.org/grpc/status"
+  "log"
+  "net"
+  "net/http"
 )
 
 const (
@@ -30,7 +31,10 @@ func (g Greeter) SayHello(ctx context.Context, request *greeter.HelloRequest) (*
 	}
 	var result = new(greeter.HelloReply)
 	result.Message = "hello " + request.Name
-	return result, nil
+  // Trailer 会存在grpc.Status 中
+  err := grpc.SetTrailer(ctx, metadata.New(map[string]string{"buf": "buffer"}))
+  err = grpc.SetHeader(ctx, metadata.New(map[string]string{"buf": "buffer"}))
+	return result, err
 }
 
 func main() {
